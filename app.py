@@ -16,12 +16,11 @@ st.set_page_config(
 # Heading
 st.title("🏏 Cricket Score Prediction")
 st.write(
-    "Predict the final team score using current match "
+    "Predict the final team score using match "
     "and player statistics."
 )
 
 st.divider()
-
 st.subheader("Enter Match Details")
 
 # Input form
@@ -43,6 +42,7 @@ with st.form("cricket_prediction_form"):
             step=1
         )
 
+        # Team wickets: 0 to 10
         team_wicket = st.number_input(
             "Team wickets lost",
             min_value=0,
@@ -66,6 +66,7 @@ with st.form("cricket_prediction_form"):
         )
 
     with col2:
+        # Bowler wickets: 0 to 10
         bowler_wicket = st.number_input(
             "Bowler wickets",
             min_value=0,
@@ -105,10 +106,10 @@ with st.form("cricket_prediction_form"):
         use_container_width=True
     )
 
-# Prediction
+# Make prediction
 if submitted:
 
-    # All 10 model features
+    # All 10 input features
     input_data = pd.DataFrame([{
         "runs_batter": runs_batter,
         "team_balls": team_balls,
@@ -122,25 +123,32 @@ if submitted:
         "runs_extras": runs_extras
     }])
 
-    # Match the exact feature order used during training
-    if hasattr(model, "feature_names_in_"):
-        input_data = input_data.loc[
-            :, model.feature_names_in_
-        ]
+    try:
+        # Match training feature order
+        if hasattr(model, "feature_names_in_"):
+            input_data = input_data.loc[
+                :, model.feature_names_in_
+            ]
 
-    # Predict
-    prediction = float(model.predict(input_data)[0])
+        # Predict score
+        prediction = float(
+            model.predict(input_data)[0]
+        )
 
-    # Display result
-    st.divider()
-    st.subheader("📊 Prediction Result")
+        # Display result
+        st.divider()
+        st.subheader("📊 Prediction Result")
 
-    st.metric(
-        label="Predicted Final Team Score",
-        value=f"{max(0, prediction):.0f} runs"
-    )
+        st.metric(
+            label="Predicted Final Team Score",
+            value=f"{max(0, prediction):.0f} runs"
+        )
 
-    st.caption(
-        "The predicted score is an estimate from your trained model."
-    )
-    
+        st.caption(
+            "This score is an estimate generated "
+            "by your trained machine learning model."
+        )
+
+    except Exception as e:
+        st.error(f"Prediction error: {e}")
+        
